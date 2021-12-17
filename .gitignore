@@ -1,2 +1,4 @@
 # dSYM folders with symbols on Mac
-**/*.dSYM/**
+**/*.dSYM/
+**/.DS_Store
+.vscode/
