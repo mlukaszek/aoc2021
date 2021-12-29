@@ -3,7 +3,6 @@ from re import findall
 from itertools import combinations
 from heapq import heappush, heappop
 from copy import copy
-from json import dumps, loads
 
 costOfStepPerKind = {
     "A": 1,
@@ -97,7 +96,7 @@ def move(state, source, destination):
 
     next[source] = next[source][1:] if len(next[source]) > 1 else ""
     next[destination] = amphipod + next[destination]
-    return dumps(next), costOfMove(amphipod, source, destination, extraSteps)
+    return stateToString(next), costOfMove(amphipod, source, destination, extraSteps)
 
 def canMove(state, source, destination):
     if not state[source]:
@@ -126,7 +125,7 @@ def canMove(state, source, destination):
 
 # Amphipods are either leaving a room, entering a room, or doing both with a single move.
 def possibleNextStates(state):
-    state = loads(state)
+    state = stringToState(state)
     # Leaving a room to any free non-room location, of vice versa
     for room in allRooms:
         for nonroom in [ location for location in allLocations if not isRoom(location) ]:
@@ -138,7 +137,6 @@ def possibleNextStates(state):
         if canMove(state, a, b): yield move(state, a, b)
         if canMove(state, b, a): yield move(state, b, a)
 
-#region Debugging functions
 def locationString(state, location):
     if not isRoom(location):
         return state[location] or "_"
@@ -146,19 +144,18 @@ def locationString(state, location):
     return ((empty * "_") or "") + (state[location] or "")
 
 def stateToString(state):
-    state = loads(state)
     return ' '.join([ locationString(state, location) for location in allLocations ])
 
 def stringToState(stateString):
     fields = stateString.split()
-    return { location: fields[i].replace("_", "") for i, location in enumerate(allLocations) if fields[i] != "." }
+    return { location: fields[i].replace("_", "") for i, location in enumerate(allLocations) }
 
 def printTraceBack(goal, cost, previousStates):
     print("----- Traceback -----")
-    traceback = [ (stateToString(goal), None) ]
+    traceback = [ (goal, None) ]
     node, cost = previousStates[goal]
     while True:
-        traceback.insert(0, (stateToString(node), cost))
+        traceback.insert(0, (node, cost))
         node, cost = previousStates[node]
         if node is None:
             break
@@ -167,7 +164,6 @@ def printTraceBack(goal, cost, previousStates):
         print(step)
         if cost is not None:
             print(f" move costing {cost}")
-#endregion Debugging functions
 
 # Maybe later...
 # def heuristic(next, goal):
@@ -215,14 +211,14 @@ def main(args = ()):
     for i, room in enumerate(allRooms):
         state[room] = initial[i]
         goal[room] = ROOM_SIZE * "ABCD"[i]
-    print("Part 1:", solve(dumps(state), dumps(goal)))
+    print("Part 1:", solve(stateToString(state), stateToString(goal)))
 
     ROOM_SIZE = 4
     extras = ( "DD", "CB", "BA", "AC" )
     for i, room in enumerate(allRooms):
         state[room] = state[room][0] + extras[i] + state[room][1]
         goal[room] = ROOM_SIZE * "ABCD"[i]
-    print("Part 2:", solve(dumps(state), dumps(goal)))
+    print("Part 2:", solve(stateToString(state), stateToString(goal)))
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
